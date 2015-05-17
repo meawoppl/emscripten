@@ -13,12 +13,13 @@ before_install:
   - sudo apt-get install cmake
   - sudo apt-get install git-core
   - sudo apt-get install default-jre
-  - sudo apt-cache search libmozjs
-  - sudo apt-get install libmozjs-24-bin libmozjs-24-dev
+
+  # This version is probably older than desireable . . .
+  - sudo apt-get install libmozjs185-1.0 libmozjs185-dev
 
   # Required by spidermonkey install below
-  - sudo apt-get install autoconf2.13
-  - autoconf --version
+  # - sudo apt-get install autoconf2.13
+  # - autoconf --version
 
   # Newer cmake
   - cd ~
