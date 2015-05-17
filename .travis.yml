@@ -29,10 +29,6 @@ install:
   - printf "TEMP_DIR='/tmp'\n"
   - cd ~
 
-# command to install dependencies
-install: 
-  - git clone https://github.com/kripken/emscripten.git
-
 # command to run tests
 script: 
   - cd emscripten; python emcc -v
