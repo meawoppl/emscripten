@@ -13,7 +13,8 @@ before_install:
 
   # Newer cmake
   - cd ~
-  - wget -O - http://www.cmake.org/files/v3.0/cmake-3.0.2-Linux-i386.sh | sudo bash
+  - wget http://www.cmake.org/files/v3.0/cmake-3.0.2-Linux-i386.sh
+  - sudo bash cmake-3.0.2-Linux-i386.sh --skip-license
 
   # spidermonkey
   - wget http://ftp.mozilla.org/pub/mozilla.org/js/mozjs17.0.0.tar.gz
@@ -24,6 +25,9 @@ before_install:
   - ../configure
   - make
 
+  # Sanity checks
+  - gcc --version
+  - cmake --version
 
 install:
 
