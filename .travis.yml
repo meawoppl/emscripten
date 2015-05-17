@@ -9,6 +9,8 @@ before_install:
   - sudo apt-get install cmake
   - sudo apt-get install git-core
   - sudo apt-get install default-jre
+
+  # Required by spidermonkey install below
   - sudo apt-get install autoconf2.13
 
   # Newer cmake
@@ -20,7 +22,7 @@ before_install:
   - wget http://ftp.mozilla.org/pub/mozilla.org/js/mozjs17.0.0.tar.gz
   - tar xfz mozjs17.0.0.tar.gz
   - cd mozjs17.0.0/js/src
-  - autoconf-2.13
+  - autoconf
   - mkdir build_OPT.OBJ; cd build_OPT.OBJ
   - ../configure
   - make
