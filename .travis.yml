@@ -1,0 +1,36 @@
+language: python
+python:
+  - "2.7"
+  - "3.4"
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install nodejs
+  - sudo apt-get install build-essential
+  - sudo apt-get install cmake
+  - sudo apt-get install git-core
+  - sudo apt-get install default-jre
+
+  # emscripten-fastcomp
+  - mkdir myfastcomp
+  - cd myfastcomp
+  - git clone https://github.com/kripken/emscripten-fastcomp
+  - cd emscripten-fastcomp
+  - git clone https://github.com/kripken/emscripten-fastcomp-clang tools/clang
+  - mkdir build
+  - cd build
+  - cmake .. -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD="X86;JSBackend" -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_INCLUDE_TESTS=OFF -DCLANG_INCLUDE_EXAMPLES=OFF -DCLANG_INCLUDE_TESTS=OFF
+
+  - make -j2
+
+  # Setup the config file.
+  - printf "LLVM_ROOT='`pwd`/bin\n'" >> ~/.emscripten
+  - printf "TEMP_DIR='/tmp'\n"
+  - cd ~
+
+# command to install dependencies
+install: 
+  - git clone https://github.com/kripken/emscripten.git
+
+# command to run tests
+script: 
+  - cd emscripten; python emcc -v
