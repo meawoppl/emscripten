@@ -9,9 +9,23 @@ before_install:
   - sudo apt-get install cmake
   - sudo apt-get install git-core
   - sudo apt-get install default-jre
+  - sudo apt-get install autoconf2.13
+
+  # Newer cmake
+  - cd ~
+  - wget -O - http://www.cmake.org/files/v3.0/cmake-3.0.2-Linux-i386.sh | sudo bash
+
+  # spidermonkey
+  - wget http://ftp.mozilla.org/pub/mozilla.org/js/mozjs17.0.0.tar.gz
+  - tar xfz mozjs17.0.0.tar.gz
+  - cd mozjs17.0.0/js/src
+  - autoconf-2.13
+  - mkdir build_OPT.OBJ; cd build_OPT.OBJ
+  - ../configure
+  - make
+
 
 install:
-  - wget -O - http://www.cmake.org/files/v3.0/cmake-3.0.2-Linux-i386.sh | sudo bash
 
   # emscripten-fastcomp
   - mkdir myfastcomp
@@ -26,9 +40,10 @@ install:
 
   # Setup the config file.
   - printf "LLVM_ROOT='`pwd`/bin\n'" >> ~/.emscripten
-  - printf "TEMP_DIR='/tmp'\n"
+  - printf "TEMP_DIR='/tmp'\n" >>  ~/.emscripten
   - cd ~
 
 # command to run tests
 script: 
   - cd emscripten; python emcc -v
+  - python tests/runner.py
