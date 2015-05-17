@@ -9,6 +9,7 @@ before_install:
   - sudo apt-get install cmake
   - sudo apt-get install git-core
   - sudo apt-get install default-jre
+  - sudo apt-cache search libmozjs
   - sudo apt-get install libmozjs-24-bin libmozjs-24-dev
 
   # Required by spidermonkey install below
