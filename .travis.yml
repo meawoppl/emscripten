@@ -10,17 +10,8 @@ before_install:
   - sudo apt-get install git-core
   - sudo apt-get install default-jre
 
-  # install cmake
-  - CMAKE_VERSION="3.0.0"
-  - wget "http://www.cmake.org/files/v3.0/cmake-${CMAKE_VERSION}.tar.gz"
-  - openssl sha1 "cmake-${CMAKE_VERSION}.tar.gz"
-  - tar xf "cmake-${CMAKE_VERSION}.tar.gz"
-  - cd "cmake-${CMAKE_VERSION}"
-  - ./bootstrap --prefix=~
-  - make
-  - make install
-  - export PATH="~/bin:${PATH}"
-  - cd ..
+install:
+  - wget -O - http://www.cmake.org/files/v3.0/cmake-3.0.2-Linux-i386.sh | sudo bash
 
   # emscripten-fastcomp
   - mkdir myfastcomp
