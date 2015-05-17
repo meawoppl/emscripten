@@ -19,8 +19,11 @@ before_install:
 
   # Newer gcc
   - sudo apt-get install gcc-4.7
+  - ls /usr/bi
+  - which gcc
   - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.7 60
   - gcc --version && g++ --version
+
 
   # This version is probably older than desireable . . .
   - sudo apt-get install libmozjs185-1.0 libmozjs185-dev
