@@ -66,4 +66,5 @@ install:
 
 script: 
   - python emcc -v
-  - python tests/runner.py
+  - python tests/runner.py random50
+  # - python tests/runner.py
