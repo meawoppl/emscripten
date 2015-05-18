@@ -26,9 +26,6 @@ before_install:
   # This version is probably older than desireable . . .
   - sudo apt-get install libmozjs185-1.0 libmozjs185-dev
 
-  # Download a precompiled fastcomp, unzip etc.
-  - cd ~
-  - wget http://emscripten-bin.s3-website-us-west-1.amazonaws.com/fastcomp.tar.gz -O - | tar xz
 
   # Required by spidermonkey install below
   # - sudo apt-get install autoconf2.13
@@ -49,15 +46,15 @@ before_install:
 
 install:
   # emscripten-fastcomp
+  # Download a precompiled fastcomp, unzip etc.
+  - cd ~
+  - wget http://emscripten-bin.s3-website-us-west-1.amazonaws.com/fastcomp.tar.gz -O - | tar xz
 
   # Setup the config file.
   - printf "LLVM_ROOT='/home/travis/build/bin\n'" >> ~/.emscripten
   - printf "TEMP_DIR='/tmp'\n" >>  ~/.emscripten
-  - cd ~
 
-# command to run tests
-before_script:
-  - cd emscripten
 script: 
+  - pwd
   - python emcc -v
   - python tests/runner.py
