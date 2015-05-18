@@ -56,6 +56,7 @@ install:
 
   # Setup the config file.
   - printf "SPIDERMONKEY_ENGINE = ''\n" >> ~/.emscripten
+  - printf "V8_ENGINE = ''\n" >> ~/.emscripten
   - printf "NODE_JS = 'nodejs'\n" >> ~/.emscripten
   - printf "LLVM_ROOT='/home/travis/emscripten-fastcomp/build/bin'\n" >> ~/.emscripten
   - printf "TEMP_DIR='/tmp'\n" >>  ~/.emscripten
