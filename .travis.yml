@@ -51,7 +51,7 @@ install:
   - wget http://emscripten-bin.s3-website-us-west-1.amazonaws.com/fastcomp.tar.gz -O - | tar xz
 
   # Setup the config file.
-  - printf "LLVM_ROOT='/home/travis/build/bin\n'" >> ~/.emscripten
+  - printf "LLVM_ROOT='/home/travis/build/bin'\n" >> ~/.emscripten
   - printf "TEMP_DIR='/tmp'\n" >>  ~/.emscripten
   - cd -
 
