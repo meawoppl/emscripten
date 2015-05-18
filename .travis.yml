@@ -53,8 +53,8 @@ install:
   # Setup the config file.
   - printf "LLVM_ROOT='/home/travis/build/bin\n'" >> ~/.emscripten
   - printf "TEMP_DIR='/tmp'\n" >>  ~/.emscripten
+  - cd -
 
 script: 
-  - pwd
   - python emcc -v
   - python tests/runner.py
