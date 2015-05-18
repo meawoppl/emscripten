@@ -28,7 +28,7 @@ before_install:
 
   # Download a precompiled fastcomp, unzip etc.
   - cd ~
-  - wget http://emscripten-bin.s3-website-us-west-1.amazonaws.com/fastcomp.tar.gz -O - | tar xfz
+  - wget http://emscripten-bin.s3-website-us-west-1.amazonaws.com/fastcomp.tar.gz -O - | tar xz
 
   # Required by spidermonkey install below
   # - sudo apt-get install autoconf2.13
