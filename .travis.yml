@@ -55,7 +55,7 @@ install:
   - wget http://emscripten-bin.s3-website-us-west-1.amazonaws.com/fastcomp.tar.gz -O - | tar xz
 
   # Setup the config file.
-  - printf "SPIDERMONKEY_ENGINE = ''" >> ~/.emscripten
+  - printf "SPIDERMONKEY_ENGINE = ''\n" >> ~/.emscripten
   - printf "NODE_JS = 'nodejs'\n" >> ~/.emscripten
   - printf "LLVM_ROOT='/home/travis/emscripten-fastcomp/build/bin'\n" >> ~/.emscripten
   - printf "TEMP_DIR='/tmp'\n" >>  ~/.emscripten
