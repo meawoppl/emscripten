@@ -53,8 +53,8 @@ install:
   # Setup the config file.
   - printf "LLVM_ROOT='/home/travis/build/bin'\n" >> ~/.emscripten
   - printf "TEMP_DIR='/tmp'\n" >>  ~/.emscripten
-  - printf "COMPILER_ENGINE = NODE_JS"  >>  ~/.emscripten
-  - printf "JS_ENGINES = [NODE_JS]"  >>  ~/.emscripten
+  - printf "COMPILER_ENGINE = NODE_JS\n"  >>  ~/.emscripten
+  - printf "JS_ENGINES = [NODE_JS]\n"  >>  ~/.emscripten
   # "
   - cd -
 
