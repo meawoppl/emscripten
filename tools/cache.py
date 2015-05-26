@@ -1,6 +1,6 @@
 import os.path, sys, shutil, time
 
-import tempfiles
+from . import tempfiles
 
 # Permanent cache for dlmalloc and stdlibc++
 class Cache:
@@ -13,13 +13,14 @@ class Cache:
     self.debug = debug
 
   def ensure(self):
+    from . import shared 
     shared.safe_ensure_dirs(self.dirname)
 
   def erase(self):
     tempfiles.try_delete(self.dirname)
     try:
       open(self.dirname + '__last_clear', 'w').write('last clear: ' + time.asctime() + '\n')
-    except Exception, e:
+    except Exception as e:
       print >> sys.stderr, 'failed to save last clear time: ', e
 
   def get_path(self, shortname):
@@ -59,5 +60,3 @@ def chunkify(funcs, chunk_size, DEBUG=False):
     chunks.append(curr)
     curr = None
   return [''.join([func[1] for func in chunk]) for chunk in chunks] # remove function names
-
-import shared
