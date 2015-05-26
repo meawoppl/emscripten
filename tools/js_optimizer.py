@@ -1,6 +1,6 @@
 
 import os, sys, subprocess, multiprocessing, re, string, json, shutil, logging
-import shared
+from . import shared
 
 configuration = shared.configuration
 temp_files = configuration.get_temp_files()
@@ -157,7 +157,7 @@ def get_native_optimizer():
         return shared.Cache.get(name, create_optimizer_cmake, extension='exe')
       else:
         return shared.Cache.get(name, create_optimizer, extension='exe')
-    except NativeOptimizerCreationException, e:
+    except NativeOptimizerCreationException as e:
       shared.logging.debug('failed to build native optimizer')
       handle_build_errors(outs, errs)
       open(FAIL_MARKER, 'w').write(':(')
