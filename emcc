@@ -111,7 +111,7 @@ stdout = PIPE if not DEBUG else None # suppress output of child processes
 stderr = PIPE if not DEBUG else None # unless we are in DEBUG mode
 
 EMCC_CXX = '--emscripten-cxx' in sys.argv
-sys.argv = filter(lambda x: x != '--emscripten-cxx', sys.argv)
+sys.argv = list(filter(lambda x: x != '--emscripten-cxx', sys.argv))
 
 if len(sys.argv) <= 1 or ('--help' not in sys.argv and len(sys.argv) >= 2 and sys.argv[1] != '--version'):
   shared.check_sanity(force=DEBUG)
@@ -145,13 +145,13 @@ if len(sys.argv) == 1 or '--help' in sys.argv:
   # An online HTML version (which may be of a different version of Emscripten)
   #    is up at http://kripken.github.io/emscripten-site/docs/tools_reference/emcc.html
 
-  print '''%s
+  print('''%s
 
 ------------------------------------------------------------------
 
 emcc: supported targets: llvm bitcode, javascript, NOT elf
 (autoconf likes to see elf above to enable shared object support)
-''' % (open(shared.path_from_root('site', 'build', 'text', 'docs', 'tools_reference', 'emcc.txt')).read())
+''' % (open(shared.path_from_root('site', 'build', 'text', 'docs', 'tools_reference', 'emcc.txt')).read()))
   exit(0)
 
 elif sys.argv[1] == '--version':
@@ -164,15 +164,15 @@ elif sys.argv[1] == '--version':
     pass
   finally:
     os.chdir(here)
-  print '''emcc (Emscripten GCC-like replacement) %s (%s)
+  print('''emcc (Emscripten GCC-like replacement) %s (%s)
 Copyright (C) 2014 the Emscripten authors (see AUTHORS.txt)
 This is free and open source software under the MIT license.
 There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-  ''' % (shared.EMSCRIPTEN_VERSION, revision)
+  ''' % (shared.EMSCRIPTEN_VERSION, revision))
   exit(0)
 
 elif len(sys.argv) == 2 and sys.argv[1] == '-v': # -v with no inputs
-  print 'emcc (Emscripten GCC-like replacement + linker emulating GNU ld ) %s' % shared.EMSCRIPTEN_VERSION
+  print('emcc (Emscripten GCC-like replacement + linker emulating GNU ld ) %s' % shared.EMSCRIPTEN_VERSION)
   code = subprocess.call([shared.CLANG, '-v'])
   shared.check_sanity(force=True)
   exit(code)
@@ -894,7 +894,7 @@ try:
     assert shared.Settings.USE_TYPED_ARRAYS == 2, 'altering USE_TYPED_ARRAYS is not supported'
     assert shared.Settings.QUANTUM_SIZE == 4, 'altering the QUANTUM_SIZE is not supported'
     assert shared.Settings.INIT_HEAP == 0, 'HEAP_INIT is not supported in fastcomp (and should never be needed except for debugging)'
-  except Exception, e:
+  except Exception as e:
     logging.error('Compiler settings are incompatible with fastcomp. You can fall back to the older compiler core, although that is not recommended, see http://kripken.github.io/emscripten-site/docs/building_from_source/LLVM-Backend.html')
     raise e
 
