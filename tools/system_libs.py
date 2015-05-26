@@ -1,5 +1,5 @@
 import os, json, logging, zipfile
-import shared
+from . import shared
 from subprocess import Popen, CalledProcessError
 import multiprocessing
 from tools.shared import check_call
@@ -743,7 +743,8 @@ def calculate(temp_files, in_temp, stdout_, stderr_, forced=[]):
 # emscripten-ports library management (https://github.com/emscripten-ports)
 #---------------------------------------------------------------------------
 
-import ports
+# MRG NOTE: ????
+from . import ports
 
 class Ports:
   @staticmethod
@@ -895,7 +896,7 @@ def process_args(args, settings):
   return args
 
 def show_ports():
-  print 'Available ports:'
+  print('Available ports:')
   for port in ports.ports:
-    print '   ', port.show()
+    print('   ', port.show())
 

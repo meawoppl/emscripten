@@ -1,13 +1,16 @@
-import shutil, time, os, sys, json, tempfile, copy, shlex, atexit, subprocess, hashlib, cPickle, re, errno
+import shutil, os, sys, json, tempfile, shlex, atexit, subprocess, re, errno
 from subprocess import Popen, PIPE, STDOUT
 from tempfile import mkstemp
 from distutils.spawn import find_executable
-import jsrun, cache, tempfiles
-import response_file
-import logging, platform, multiprocessing
+
+from . import response_file
+from . import jsrun
+import logging, multiprocessing
 
 # Temp file utilities
-from tempfiles import try_delete
+from .tempfiles import try_delete
+from . import cache
+from .py3compat import toStr
 
 # On Windows python suffers from a particularly nasty bug if python is spawning new processes while python itself is spawned from some other non-console process.
 # Use a custom replacement for Popen on Windows to avoid the "WindowsError: [Error 6] The handle is invalid" errors when emcc is driven through cmake or mingw32-make. 
@@ -44,7 +47,7 @@ class WindowsPopen:
       # Call the process with fixed streams.
       self.process = subprocess.Popen(args, bufsize, executable, self.stdin_, self.stdout_, self.stderr_, preexec_fn, close_fds, shell, cwd, env, universal_newlines, startupinfo, creationflags)
       self.pid = self.process.pid
-    except Exception, e:
+    except Exception as e:
       logging.error('\nsubprocess.Popen(args=%s) failed! Exception %s\n' % (' '.join(args), str(e)))
       raise e
 
@@ -255,7 +258,7 @@ This command will now exit. When you are done editing those paths, re-run it.
 try:
   config_text = open(CONFIG_FILE, 'r').read() if CONFIG_FILE else EM_CONFIG
   exec(config_text)
-except Exception, e:
+except Exception as e:
   logging.error('Error in evaluating %s (at %s): %s, text: %s' % (EM_CONFIG, CONFIG_FILE, str(e), config_text))
   sys.exit(1)
 
@@ -265,7 +268,7 @@ def listify(x):
 
 def fix_js_engine(old, new):
   global JS_ENGINES
-  JS_ENGINES = map(lambda x: new if x == old else x, JS_ENGINES)
+  JS_ENGINES = list(map(lambda x: new if x == old else x, JS_ENGINES))
   return new
 
 try:
@@ -313,7 +316,7 @@ actual_clang_version = None
 def get_clang_version():
   global actual_clang_version
   if actual_clang_version is None:
-    response = Popen([CLANG, '-v'], stderr=PIPE).communicate()[1]
+    response = toStr(Popen([CLANG, '-v'], stderr=PIPE).communicate()[1])
     m = re.search(r'[Vv]ersion\s+(\d+\.\d+)', response)
     actual_clang_version = m and m.group(1)
   return actual_clang_version
@@ -329,7 +332,7 @@ def check_clang_version():
 def check_llvm_version():
   try:
     check_clang_version()
-  except Exception, e:
+  except Exception as e:
     logging.warning('Could not verify LLVM version: %s' % str(e))
 
 # look for emscripten-version.txt files under or alongside the llvm source dir
@@ -351,7 +354,7 @@ def get_fastcomp_src_dir():
 
 def check_fastcomp():
   try:
-    llc_version_info = Popen([LLVM_COMPILER, '--version'], stdout=PIPE).communicate()[0]
+    llc_version_info = toStr(Popen([LLVM_COMPILER, '--version'], stdout=PIPE).communicate()[0])
     pre, targets = llc_version_info.split('Registered Targets:')
     if 'js' not in targets or 'JavaScript (asm.js, emscripten) backend' not in targets:
       logging.critical('fastcomp in use, but LLVM has not been built with the JavaScript backend as a target, llc reports:')
@@ -376,22 +379,23 @@ def check_fastcomp():
     else:
       logging.warning('did not see a source tree above or next to the LLVM root directory (guessing based on directory of %s), could not verify version numbers match' % LLVM_COMPILER)
     return True
-  except Exception, e:
+  except Exception as e:
     logging.warning('could not check fastcomp: %s' % str(e))
+    print(e)
     return True
 
 EXPECTED_NODE_VERSION = (0,8,0)
 
 def check_node_version():
   try:
-    actual = Popen(NODE_JS + ['--version'], stdout=PIPE).communicate()[0].strip()
+    actual = toStr(Popen(NODE_JS + ['--version'], stdout=PIPE).communicate()[0]).strip()
     version = tuple(map(int, actual.replace('v', '').replace('-pre', '').split('.')))
     if version >= EXPECTED_NODE_VERSION:
       return True
     logging.warning('node version appears too old (seeing "%s", expected "%s")' % (actual, 'v' + ('.'.join(map(str, EXPECTED_NODE_VERSION)))))
     return False
-  except Exception, e:
-    logging.warning('cannot check node version: %s',  e)
+  except Exception as e:
+    logging.warning('cannot check node version: %s', e)
     return False
 
 # Finds the system temp directory without resorting to using the one configured in .emscripten
@@ -418,17 +422,17 @@ def find_temp_directory():
 try:
   EMSCRIPTEN_VERSION = open(path_from_root('emscripten-version.txt')).read().strip()
   try:
-    parts = map(int, EMSCRIPTEN_VERSION.split('.'))
+    parts = list(map(int, EMSCRIPTEN_VERSION.split('.')))
     EMSCRIPTEN_VERSION_MAJOR = parts[0]
     EMSCRIPTEN_VERSION_MINOR = parts[1]
     EMSCRIPTEN_VERSION_TINY = parts[2]
-  except Exception, e:
+  except Exception as e:
     logging.warning('emscripten version ' + EMSCRIPTEN_VERSION + ' lacks standard parts')
     EMSCRIPTEN_VERSION_MAJOR = 0
     EMSCRIPTEN_VERSION_MINOR = 0
     EMSCRIPTEN_VERSION_TINY = 0
     raise e
-except Exception, e:
+except Exception as e:
   logging.error('cannot find emscripten version ' + str(e))
   EMSCRIPTEN_VERSION = 'unknown'
 
@@ -456,7 +460,7 @@ def check_sanity(force=False):
               reason = 'system change: %s vs %s' % (generate_sanity(), sanity_data)
             else:
               if not force: return # all is well
-        except Exception, e:
+        except Exception as e:
           reason = 'unknown: ' + str(e)
     if reason:
       logging.warning('(Emscripten: %s, clearing cache)' % reason)
@@ -513,9 +517,9 @@ def check_sanity(force=False):
       f.write(generate_sanity())
       f.close()
 
-  except Exception, e:
+  except Exception as e:
     # Any error here is not worth failing on
-    print 'WARNING: sanity check failed to run', e
+    print('WARNING: sanity check failed to run', e)
 
 # Tools/paths
 
@@ -621,7 +625,7 @@ FILE_PACKAGER = path_from_root('tools', 'file_packager.py')
 def safe_ensure_dirs(dirname):
   try:
     os.makedirs(dirname)
-  except os.error, e:
+  except os.error as e:
     # Ignore error for already existing dirname
     if e.errno != errno.EEXIST:
       raise e
@@ -667,10 +671,11 @@ class Configuration:
       try:
         self.EMSCRIPTEN_TEMP_DIR = self.CANONICAL_TEMP_DIR
         safe_ensure_dirs(self.EMSCRIPTEN_TEMP_DIR)
-      except Exception, e:
+      except Exception as e:
         logging.error(str(e) + 'Could not create canonical temp dir. Check definition of TEMP_DIR in ~/.emscripten')
 
   def get_temp_files(self):
+    from . import tempfiles
     return tempfiles.TempFiles(
       tmp=self.TEMP_DIR if not self.DEBUG else get_emscripten_temp_dir(),
       save_debug_files=os.environ.get('EMCC_DEBUG_SAVE'))
@@ -698,8 +703,8 @@ try:
 except:
   try:
     JS_ENGINES = [JS_ENGINE]
-  except Exception, e:
-    print 'ERROR: %s does not seem to have JS_ENGINES or JS_ENGINE set up' % EM_CONFIG
+  except Exception as e:
+    print('ERROR: %s does not seem to have JS_ENGINES or JS_ENGINE set up' % EM_CONFIG)
     raise
 
 try:
@@ -811,8 +816,8 @@ def check_engine(engine):
     if not CONFIG_FILE:
       return True # config stored directly in EM_CONFIG => skip engine check
     return 'hello, world!' in run_js(path_from_root('src', 'hello_world.js'), engine)
-  except Exception, e:
-    print 'Checking JS engine %s failed. Check %s. Details: %s' % (str(engine), EM_CONFIG, str(e))
+  except Exception as e:
+    print('Checking JS engine %s failed. Check %s. Details: %s' % (str(engine), EM_CONFIG, str(e)))
     return False
 
 def make_js_command(filename, engine=None, *args):
@@ -907,7 +912,7 @@ class Settings2(type):
       # Load the JS defaults into python
       settings = open(path_from_root('src', 'settings.js')).read().replace('//', '#')
       settings = re.sub(r'var ([\w\d]+)', r'self.attrs["\1"]', settings)
-      exec settings
+      exec(settings)
 
       # Apply additional settings. First -O, then -s
       for i in range(len(args)):
@@ -919,7 +924,7 @@ class Settings2(type):
       for i in range(len(args)):
         if args[i] == '-s':
           declare = re.sub(r'([\w\d]+)\s*=\s*(.+)', r'self.attrs["\1"]=\2;', args[i+1])
-          exec declare
+          exec (declare)
 
     # Transforms the Settings information into emcc-compatible args (-s X=Y, etc.). Basically
     # the reverse of load_settings, except for -Ox which is relevant there but not here
@@ -1096,7 +1101,7 @@ class Building:
       if EM_BUILD_VERBOSE_LEVEL >= 3: print >> sys.stderr, 'configure: ' + str(args)
       process = Popen(args, stdout=None if EM_BUILD_VERBOSE_LEVEL >= 2 else stdout, stderr=None if EM_BUILD_VERBOSE_LEVEL >= 1 else stderr, env=env)
       process.communicate()
-    except Exception, e:
+    except Exception as e:
       logging.error('Exception thrown when invoking Popen in configure with args: "%s"!' % ' '.join(args))
       raise
     if 'EMMAKEN_JUST_CONFIGURE' in env: del env['EMMAKEN_JUST_CONFIGURE']
@@ -1128,7 +1133,7 @@ class Building:
       if EM_BUILD_VERBOSE_LEVEL >= 3: print >> sys.stderr, 'make: ' + str(args)
       process = Popen(args, stdout=None if EM_BUILD_VERBOSE_LEVEL >= 2 else stdout, stderr=None if EM_BUILD_VERBOSE_LEVEL >= 1 else stderr, env=env, shell=WINDOWS)
       process.communicate()
-    except Exception, e:
+    except Exception as e:
       logging.error('Exception thrown when invoking Popen in make with args: "%s"!' % ' '.join(args))
       raise
     if process.returncode is not 0:
@@ -1173,7 +1178,7 @@ class Building:
       try:
         Building.configure(configure + configure_args, env=env, stdout=open(os.path.join(project_dir, 'configure_'), 'w') if EM_BUILD_VERBOSE_LEVEL < 2 else None,
                                                                 stderr=open(os.path.join(project_dir, 'configure_err'), 'w') if EM_BUILD_VERBOSE_LEVEL < 1 else None)
-      except subprocess.CalledProcessError, e:
+      except subprocess.CalledProcessError as e:
         pass # Ignore exit code != 0
     def open_make_out(i, mode='r'):
       return open(os.path.join(project_dir, 'make_' + str(i)), mode)
@@ -1190,7 +1195,7 @@ class Building:
           try:
             Building.make(make + make_args, stdout=make_out if EM_BUILD_VERBOSE_LEVEL < 2 else None,
                                             stderr=make_err if EM_BUILD_VERBOSE_LEVEL < 1 else None, env=env)
-          except subprocess.CalledProcessError, e:
+          except subprocess.CalledProcessError as e:
             pass # Ignore exit code != 0
       try:
         if cache is not None:
@@ -1199,7 +1204,7 @@ class Building:
             basename = os.path.basename(f)
             cache[cache_name].append((basename, open(f, 'rb').read()))
         break
-      except Exception, e:
+      except Exception as e:
         if i > 0:
           if EM_BUILD_VERBOSE_LEVEL == 0:
             # Due to the ugly hack above our best guess is to output the first run
@@ -1512,6 +1517,7 @@ class Building:
 
   @staticmethod
   def emscripten(filename, append_ext=True, extra_args=[]):
+    import jsrun
     # Allow usage of emscripten.py without warning
     os.environ['EMSCRIPTEN_SUPPRESS_USAGE_WARNING'] = '1'
 
@@ -1624,7 +1630,7 @@ class Building:
                  b[6] == '>' and ord(b[7]) == 10
       Building._is_ar_cache[filename] = sigcheck
       return sigcheck
-    except Exception, e:
+    except Exception as e:
       logging.debug('Building.is_ar failed to test whether file \'%s\' is a llvm archive file! Failed on exception: %s' % (filename, e))
       return False
 
@@ -1651,7 +1657,7 @@ class Building:
     
     import gen_struct_info
     gen_struct_info.main(['-qo', info_path, path_from_root('src/struct_info.json')])
-  
+
 # compatibility with existing emcc, etc. scripts
 Cache = cache.Cache(debug=DEBUG_CACHE)
 chunkify = cache.chunkify
@@ -1886,6 +1892,3 @@ def safe_copy(src, dst):
   if src == dst:
     return
   shutil.copyfile(src, dst)
-
-import js_optimizer
-
